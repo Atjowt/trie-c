@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.0.0)
+project(main LANGUAGES C)
+add_library(trie src/trie.c)
+add_executable(main src/main.c)
+target_link_libraries(main PRIVATE trie)
