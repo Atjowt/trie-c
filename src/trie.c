@@ -1,73 +1,59 @@
-#include <string.h>
-
 #include "trie.h"
 
-#define CHILD(trie, key) trie->children[key - 'a']
+#define KEYS 26
+#define CHILD(node, key) node->children[key - 'a']
 
-struct TRIE
-{
-    TRIE* children[26];
-    bool terminal;
+struct Trie {
+    Trie* children[KEYS];
+    bool is_tail;
 };
 
-TRIE* trie_create(void)
-{
-    return malloc(sizeof(TRIE));
+Trie* trie_create(void) {
+    return malloc(sizeof(Trie));
 }
 
-void trie_insert(TRIE* trie, const char* string)
-{
-    TRIE* pointer = trie;
-    for (size_t i = 0; i < strlen(string); i++)
-    {
-        char key = string[i];
-        TRIE* child = CHILD(pointer, key);
-        if (child == NULL)
-        {
-            child = trie_create();
-            CHILD(pointer, key) = child;
+void trie_insert(Trie* trie, const char* word) {
+    Trie* node = trie;
+    while (*word) {
+        char key = *word;
+        Trie* next = CHILD(node, key);
+        if (next == NULL) {
+            next = trie_create();
+            CHILD(node, key) = next;
         }
-        pointer = child;
+        node = next;
+        word++;
     }
-    pointer->terminal = true;
+    node->is_tail = true;
 }
 
-TRIE* trie_search(const TRIE* trie, const char* string, bool prefix)
-{
-    TRIE* pointer = (TRIE*)trie;
-    for (size_t i = 0; i < strlen(string); i++)
-    {
-        char key = string[i];
-        TRIE* child = CHILD(pointer, key);
-        if (child == NULL)
-        {
+Trie* trie_search(Trie* trie, const char* word, bool is_prefix) {
+    Trie* node = trie;
+    while (*word) {
+        char key = *word;
+        Trie* child = CHILD(node, key);
+        if (child == NULL) {
             return NULL;
         }
-        pointer = child;
+        node = child;
+        word++;
     }
-    return prefix || pointer->terminal ? pointer : NULL;
+    return (is_prefix || node->is_tail) ? node : NULL;
 }
 
-bool trie_remove(TRIE* trie, const char* string)
-{
-    TRIE* pointer = trie_search(trie, string, false);
-    if (pointer == NULL)
-    {
+bool trie_remove(Trie* trie, const char* word) {
+    Trie* pointer = trie_search(trie, word, false);
+    if (pointer == NULL) {
         return false;
     }
-    pointer->terminal = false;
+    pointer->is_tail = false;
     return true;
 }
 
-void trie_destroy(TRIE* trie)
-{
-    for (char key = 'a'; key <= 'z'; key++)
-    {
-        TRIE* child = trie->children[key - 'a'];
-        if (child != NULL)
-        {
-            trie_destroy(child);
-        }
+void trie_destroy(Trie* trie) {
+    if (trie == NULL) return;
+    for (size_t i = 0; i < KEYS; i++) {
+        trie_destroy(trie->children[i]);
     }
     free(trie);
 }
